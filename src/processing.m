@@ -57,6 +57,22 @@ for subject = subjects
         [b_notch, a_notch] = iirnotch(notch_freq / (200/2), notch_freq / (200/2) / Q);
         emg_notched = filtfilt(b_notch, a_notch, emg_bandpassed);
 
+        % Full wave rectification
+        emg_rectified = abs(emg_notched);
+
+        % RMS envelope signal, smoothing rectified signal to represent overall amplitude of the signal over time
+        window_length = 100;
+        emg_rms = zeros(size(emg_rectified));
+        for ch = 1:size(emg_rectified, 2)
+            for i = 1:size(emg_rectified, 1)
+                start_idx = max(1, i - floor(window_length/2));
+                end_idx = min(size(emg_rectified, 1), i + floor(window_length/2));
+                emg_rms(i, ch) = sqrt(mean(emg_rectified(start_idx:end_idx, ch).^2));
+            end
+        end
+        % Max normalization
+        emg_normalized = emg_rms ./ max(emg_rms, [], 1);
+        processed_data{subject} = emg_normalized;
 
         % Plotting for testing purposes
         t = (0:length(emg_raw)-1) / 200;
@@ -74,8 +90,8 @@ for subject = subjects
         ylabel('Amplitude');
 
         subplot(3, 1, 3);
-        plot(t, emg_notched);
-        title('Notched EMG');
+        plot(t, emg_normalized);
+        title('Normalized EMG');
         xlabel('Time (s)');
         ylabel('Amplitude');
         break;
