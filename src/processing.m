@@ -24,10 +24,6 @@ for subject = subjects % For each subject
 
         all_emg_data{subject} = emg; % Store emg data for subject
         all_labels{subject} = restimulus; % Store label for subject
-
-        fprintf("Loaded data for Subject %d\n", subject);
-        fprintf('Data shape: %d samples x %d channels\n', size(emg));
-        fprintf('Number of movements: %d\n\n', max(restimulus));
     else
         warning('File not found: %s', filepath);
     end
