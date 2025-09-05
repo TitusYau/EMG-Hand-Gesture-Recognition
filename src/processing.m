@@ -5,12 +5,13 @@ clc; % Clears command window
 fs = 200; % Sampling frequency of 200Hz
 subjects = 1:10;
 data_path = '/data/raw';
+interim_path = '/data/interim';
 num_channels = 16;
 
 % Initialize storage, creating empty arrays to store the emg data, labels, and subject info
 all_emg_data = {} ;
 all_labels = {};
-subject_info = {};
+all_repetition = {};
 
 % Load and process data for all subjects
 for subject = subjects % For each subject
@@ -20,18 +21,17 @@ for subject = subjects % For each subject
         loaded_data = load(filepath);
         emg = loaded_data.emg; % EMG Signals
         restimulus = loaded_data.restimulus; % Movement labels
-        repetition = loaded_data.repetition; % Rep numbers 
+        rerepetition = loaded_data.rerepetition; % Rep numbers 
 
         all_emg_data{subject} = emg; % Store emg data for subject
-        all_labels{subject} = restimulus; % Store label for subject
+        all_stimulus{subject} = restimulus; % Store label for subject
+        all_repetition{subject} = rerepetition;
     else
         warning('File not found: %s', filepath);
     end
 end
 
 % Signal Preprocessing
-
-processed_data = {}
 
 for subject = subjects
     if ~isempty(all_emg_data)
@@ -68,28 +68,8 @@ for subject = subjects
         end
         % Max normalization
         emg_normalized = emg_rms ./ max(emg_rms, [], 1);
-        processed_data{subject} = emg_normalized;
-
-        % Plotting for testing purposes
-        t = (0:length(emg_raw)-1) / 200;
-        figure;
-        subplot(3, 1, 1);
-        plot(t, emg_raw);
-        title('EMG Raw');
-        xlabel('Time');
-        ylabel('Amplitude');
-
-        subplot(3, 1, 2);
-        plot(t, emg_bandpassed);
-        title('Bandpassed EMG');
-        xlabel('Time');
-        ylabel('Amplitude');
-
-        subplot(3, 1, 3);
-        plot(t, emg_normalized);
-        title('Normalized EMG');
-        xlabel('Time (s)');
-        ylabel('Amplitude');
-        break;
+        restimulus = all_stimulus{subject};
+        rerepetition = all_repetition{subject};
+        save(fullfile(pwd,interim_path, sprintf('S%d_E2_processed.mat', subject)), 'emg_normalized', 'restimulus', 'rerepetition');
     end
 end
